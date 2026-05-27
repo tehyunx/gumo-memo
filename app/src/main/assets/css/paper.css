@@ -1,0 +1,29 @@
+/* 줄노트 - 연한 파란 가로줄 */
+.paper-lined {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent calc(2em - 1px),
+    #c8d8ea calc(2em - 1px),
+    #c8d8ea 2em
+  );
+  background-size: 100% 2em;
+  background-attachment: local;
+  line-height: 2;
+}
+
+/* 격자 */
+.paper-grid {
+  background-image:
+    repeating-linear-gradient(to right,  #c8d8ea 0, #c8d8ea 1px, transparent 1px, transparent 2em),
+    repeating-linear-gradient(to bottom, #c8d8ea 0, #c8d8ea 1px, transparent 1px, transparent 2em);
+  background-size: 2em 2em;
+  background-attachment: local;
+  line-height: 2;
+}
+
+/* 무선 */
+.paper-blank {
+  background: none;
+  line-height: 1.8;
+}

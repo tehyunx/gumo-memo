@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>구모메모</title>
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/paper.css">
+<link rel="stylesheet" href="css/list.css">
+</head>
+<body>
+
+<!-- 목록 화면 -->
+<div id="screen-list" class="screen active">
+  <header class="app-header">
+    <span class="app-title">구모메모</span>
+    <div class="header-actions">
+      <button class="btn-icon" onclick="UI.openTagManager()">🏷</button>
+      <button class="btn-icon" onclick="UI.openSettings()">⚙️</button>
+    </div>
+  </header>
+
+  <div id="tag-filter-bar" class="tag-bar">
+    <div class="tag-scroll">
+      <button class="tag-chip active" data-tag-id="all" onclick="List.filterByTag('all', this)">전체</button>
+    </div>
+  </div>
+
+  <div id="note-list" class="note-list"></div>
+  <button class="fab" onclick="Editor.openNew()">＋</button>
+</div>
+
+<!-- 에디터 화면 -->
+<div id="screen-editor" class="screen">
+  <header class="editor-header">
+    <button class="btn-back" onclick="Editor.save()">← 저장</button>
+    <div class="editor-tools">
+      <button class="btn-tool" onclick="Editor.cyclePaper()" id="btn-paper">▤ 줄</button>
+      <button class="btn-tool" onclick="UI.openFontPanel()">A</button>
+      <button class="btn-tool" onclick="UI.openTagPanel()">🏷</button>
+      <button class="btn-tool" onclick="Editor.pickImage()">🖼</button>
+    </div>
+  </header>
+
+  <div id="editor-scroll" class="editor-scroll">
+    <input id="note-title" class="note-title-input" placeholder="제목 (선택사항)" type="text">
+    <div id="note-content" class="note-content paper-lined" contenteditable="true" spellcheck="false"></div>
+    <div id="note-images" class="note-images"></div>
+  </div>
+</div>
+
+<!-- 설정 패널 -->
+<div id="panel-settings" class="panel hidden">
+  <div class="panel-header"><span>설정</span><button onclick="UI.closePanel('panel-settings')">✕</button></div>
+  <div class="panel-body">
+    <label>기본 폰트 크기</label>
+    <div class="font-size-row">
+      <input type="range" min="12" max="24" step="1" id="setting-font-size" oninput="Settings.setFontSize(this.value)">
+      <span id="setting-font-size-label">16px</span>
+    </div>
+    <label>기본 용지</label>
+    <select id="setting-paper" onchange="Settings.setPaper(this.value)">
+      <option value="lined">줄노트</option>
+      <option value="grid">격자</option>
+      <option value="blank">무선</option>
+    </select>
+  </div>
+</div>
+
+<!-- 태그 관리 패널 -->
+<div id="panel-tags" class="panel hidden">
+  <div class="panel-header"><span>태그 관리</span><button onclick="UI.closePanel('panel-tags')">✕</button></div>
+  <div class="panel-body">
+    <div class="tag-input-row">
+      <input id="new-tag-name" placeholder="태그 이름" type="text">
+      <input type="color" id="new-tag-color" value="#4A90D9">
+      <button class="btn-add" onclick="TagMgr.createTag()">추가</button>
+    </div>
+    <div id="tag-list-panel"></div>
+  </div>
+</div>
+
+<!-- 노트 태그 선택 패널 -->
+<div id="panel-note-tags" class="panel hidden">
+  <div class="panel-header"><span>태그 선택</span><button onclick="UI.closePanel('panel-note-tags')">✕</button></div>
+  <div id="note-tag-list" class="panel-body"></div>
+</div>
+
+<!-- 폰트 크기 패널 -->
+<div id="panel-font" class="panel hidden">
+  <div class="panel-header"><span>글자 크기</span><button onclick="UI.closePanel('panel-font')">✕</button></div>
+  <div class="panel-body">
+    <div class="font-size-row">
+      <input type="range" min="12" max="24" step="1" id="editor-font-size" oninput="Editor.setFontSize(this.value)">
+      <span id="editor-font-size-label">16px</span>
+    </div>
+  </div>
+</div>
+
+<div id="overlay" class="overlay hidden" onclick="UI.closeAllPanels()"></div>
+
+<script src="js/db.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/list.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
