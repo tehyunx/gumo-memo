@@ -55,7 +55,7 @@
   <div class="panel-body">
     <label>기본 폰트 크기</label>
     <div class="font-size-row">
-      <input type="range" min="12" max="24" step="1" id="setting-font-size" oninput="Settings.setFontSize(this.value)">
+      <input type="range" min="12" max="24" step="1" id="setting-font-size" oninput="Settings.setFontSize(this.value)" onchange="Settings.setFontSize(this.value)">
       <span id="setting-font-size-label">16px</span>
     </div>
     <label>기본 용지</label>
@@ -91,7 +91,7 @@
   <div class="panel-header"><span>글자 크기</span><button onclick="UI.closePanel('panel-font')">✕</button></div>
   <div class="panel-body">
     <div class="font-size-row">
-      <input type="range" min="12" max="24" step="1" id="editor-font-size" oninput="Editor.setFontSize(this.value)">
+      <input type="range" min="12" max="24" step="1" id="editor-font-size" oninput="Editor.setFontSize(this.value)" onchange="Editor.setFontSize(this.value)">
       <span id="editor-font-size-label">16px</span>
     </div>
   </div>

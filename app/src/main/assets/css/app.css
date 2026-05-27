@@ -118,7 +118,7 @@ html, body {
 .note-content {
   min-height: calc(100vh - 160px);
   padding: 16px;
-  font-size: var(--font-size);
+  font-size: var(--editor-font-size, var(--font-size));
   line-height: 2;
   outline: none;
   white-space: pre-wrap; word-break: break-word;

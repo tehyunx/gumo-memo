@@ -52,6 +52,7 @@ class MainActivity : AppCompatActivity() {
             @Suppress("DEPRECATION")
             allowUniversalAccessFromFileURLs = true
             setSupportZoom(false)
+            textZoom = 100  // 시스템 폰트 크기 설정이 CSS를 덮어쓰지 않도록
         }
         webView.addJavascriptInterface(jsInterface, "Android")
         webView.webChromeClient = WebChromeClient()

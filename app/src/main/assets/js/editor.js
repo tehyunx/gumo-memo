@@ -81,7 +81,8 @@ const Editor = (() => {
 
   function applyFontSize(size) {
     currentFontSize = parseInt(size);
-    document.getElementById('note-content').style.fontSize = currentFontSize + 'px';
+    // inline style 대신 CSS variable 사용 → contenteditable에서 더 안정적
+    document.getElementById('editor-scroll').style.setProperty('--editor-font-size', currentFontSize + 'px');
   }
 
   function setFontSize(val) {

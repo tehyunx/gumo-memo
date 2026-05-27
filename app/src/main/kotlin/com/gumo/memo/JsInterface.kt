@@ -109,14 +109,22 @@ class JsInterface(
 
     @JavascriptInterface
     fun getSharedText(): String {
-        val text = pendingSharedText ?: return "null"
+        val prefs = context.getSharedPreferences("memo_settings", Context.MODE_PRIVATE)
+        val text = prefs.getString("shared_text_temp", null)
+            ?: pendingSharedText
+            ?: return "null"
+        prefs.edit().remove("shared_text_temp").apply()
         pendingSharedText = null
         return JSONObject().apply { put("text", text) }.toString()
     }
 
     @JavascriptInterface
     fun getSharedImagePath(): String {
-        val path = pendingSharedImagePath ?: return "null"
+        val prefs = context.getSharedPreferences("memo_settings", Context.MODE_PRIVATE)
+        val path = prefs.getString("shared_image_temp", null)
+            ?: pendingSharedImagePath
+            ?: return "null"
+        prefs.edit().remove("shared_image_temp").apply()
         pendingSharedImagePath = null
         return path
     }

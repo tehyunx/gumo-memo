@@ -10,16 +10,15 @@ class ShareActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val mainIntent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
+        val prefs = getSharedPreferences("memo_settings", MODE_PRIVATE)
 
         when {
             intent?.action == Intent.ACTION_SEND && intent.type == "text/plain" -> {
                 val text = intent.getStringExtra(Intent.EXTRA_TEXT) ?: ""
                 val subject = intent.getStringExtra(Intent.EXTRA_SUBJECT) ?: ""
                 val combined = if (subject.isNotBlank()) "$subject\n\n$text" else text
-                mainIntent.putExtra("shared_text", combined)
+                // Intent extras는 1MB Binder 한도 → SharedPreferences로 우회 (용량 무제한)
+                prefs.edit().putString("shared_text_temp", combined).apply()
             }
             intent?.action == Intent.ACTION_SEND && intent.type?.startsWith("image/") == true -> {
                 @Suppress("DEPRECATION")
@@ -27,12 +26,15 @@ class ShareActivity : AppCompatActivity() {
                 if (imageUri != null) {
                     val path = JsInterface(this, DatabaseHelper(this), {}, {})
                         .saveImageToStorage(imageUri)
-                    mainIntent.putExtra("shared_image_path", path)
+                    prefs.edit().putString("shared_image_temp", path).apply()
                 }
             }
         }
 
-        startActivity(mainIntent)
+        startActivity(Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("from_share", true)
+        })
         finish()
     }
 }
