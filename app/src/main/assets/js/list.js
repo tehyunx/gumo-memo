@@ -66,17 +66,44 @@ const List = (() => {
     const preview = plainText(note.content);
     const displayTitle = note.title || preview.substring(0, 30) || '제목 없음';
 
-    // 헤더
+    // 헤더 (버튼 포함 — 항상 보임)
     const header = document.createElement('div');
     header.className = 'note-card-header';
-    header.innerHTML =
-      '<span class="note-fold-icon">▶</span>' +
-      '<div class="note-card-meta">' +
-        '<div class="note-card-title">' + esc(displayTitle) + '</div>' +
-        (preview ? '<div class="note-card-preview">' + esc(preview.substring(0, 60)) + '</div>' : '') +
-      '</div>' +
-      '<span class="note-card-date">' + formatDate(note.updated_at) + '</span>';
-    header.onclick = () => toggleCard(card, note.id);
+
+    const foldIcon = document.createElement('span');
+    foldIcon.className = 'note-fold-icon';
+    foldIcon.textContent = '▶';
+
+    const meta = document.createElement('div');
+    meta.className = 'note-card-meta';
+    meta.innerHTML =
+      '<div class="note-card-title">' + esc(displayTitle) + '</div>' +
+      (preview ? '<div class="note-card-preview">' + esc(preview.substring(0, 60)) + '</div>' : '');
+
+    const date = document.createElement('span');
+    date.className = 'note-card-date';
+    date.textContent = formatDate(note.updated_at);
+
+    // 편집/삭제 버튼 — 헤더에 배치 (항상 접근 가능)
+    const headerActions = document.createElement('div');
+    headerActions.className = 'note-header-actions';
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn-edit-card';
+    editBtn.textContent = '편집';
+    editBtn.onclick = (e) => { e.stopPropagation(); Editor.openExisting(note.id); };
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn-del-card';
+    delBtn.textContent = '삭제';
+    delBtn.onclick = (e) => { e.stopPropagation(); List.deleteNote(note.id); };
+
+    headerActions.append(editBtn, delBtn);
+    header.append(foldIcon, meta, date, headerActions);
+    header.onclick = (e) => {
+      if (e.target.closest('.note-header-actions')) return;
+      toggleCard(card, note.id);
+    };
 
     // 태그 뱃지
     const tagRow = document.createElement('div');
@@ -107,18 +134,7 @@ const List = (() => {
       imgsEl.appendChild(im);
     });
 
-    const actions = document.createElement('div');
-    actions.className = 'note-card-actions';
-    const editBtn = document.createElement('button');
-    editBtn.textContent = '편집';
-    editBtn.onclick = (e) => { e.stopPropagation(); Editor.openExisting(note.id); };
-    const delBtn = document.createElement('button');
-    delBtn.className = 'btn-delete';
-    delBtn.textContent = '삭제';
-    delBtn.onclick = (e) => { e.stopPropagation(); List.deleteNote(note.id); };
-    actions.append(editBtn, delBtn);
-
-    body.append(contentEl, imgsEl, actions);
+    body.append(contentEl, imgsEl);
     card.append(header, tagRow, body);
     return card;
   }

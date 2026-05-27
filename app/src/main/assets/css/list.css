@@ -8,7 +8,7 @@
 /* 카드 헤더 (항상 보임) */
 .note-card-header {
   display: flex; align-items: center;
-  padding: 13px 14px;
+  padding: 10px 10px 10px 14px;
   cursor: pointer; user-select: none;
   gap: 8px;
 }
@@ -50,7 +50,7 @@
   overflow: hidden;
   transition: max-height 0.28s ease;
 }
-.note-card.expanded .note-card-body { max-height: 3000px; }
+.note-card.expanded .note-card-body { max-height: 600px; }
 
 .note-card-content {
   padding: 12px 16px;
@@ -59,7 +59,10 @@
   color: var(--text);
   white-space: pre-wrap; word-break: break-word;
   border-top: 1px solid var(--border);
+  /* 긴 글은 자체 스크롤 */
+  max-height: 420px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .note-card-images {
@@ -71,18 +74,20 @@
   object-fit: cover; border-radius: 7px;
 }
 
-/* 액션 버튼 */
-.note-card-actions {
-  display: flex; gap: 8px; justify-content: flex-end;
-  padding: 6px 14px 14px;
-}
-.note-card-actions button {
+/* 헤더 내 인라인 액션 버튼 (항상 보임) */
+.note-header-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.btn-edit-card {
   background: none; border: 1px solid var(--border);
-  border-radius: 7px; padding: 6px 14px;
-  font-size: 13px; cursor: pointer; color: var(--text);
+  border-radius: 6px; padding: 4px 10px;
+  font-size: 12px; cursor: pointer; color: var(--text);
 }
-.note-card-actions button:active { background: var(--border); }
-.btn-delete { color: #e04040 !important; border-color: #e04040 !important; }
+.btn-edit-card:active { background: var(--border); }
+.btn-del-card {
+  background: none; border: 1px solid #e04040;
+  border-radius: 6px; padding: 4px 10px;
+  font-size: 12px; cursor: pointer; color: #e04040;
+}
+.btn-del-card:active { background: #ffeaea; }
 
 /* 태그 관리 패널 항목 */
 .tag-panel-item {
