@@ -1,162 +1,161 @@
 const List = (() => {
   let currentTagId = 'all';
-
-  function formatDate(ts) {
-    const d = new Date(ts), now = new Date();
-    const diff = now - d;
-    if (diff < 60000) return '방금';
-    if (diff < 3600000) return Math.floor(diff / 60000) + '분 전';
-    if (diff < 86400000) return Math.floor(diff / 3600000) + '시간 전';
-    if (d.getFullYear() === now.getFullYear())
-      return (d.getMonth() + 1) + '/' + d.getDate();
-    return d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate();
-  }
-
-  function esc(s) {
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
+  let searchQuery = '';
+  const DOW = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
 
   function plainText(html) {
-    const tmp = document.createElement('div');
-    tmp.innerHTML = html;
-    return (tmp.textContent || '').replace(/\s+/g, ' ').trim();
+    return html
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/div>/gi, '\n')
+      .replace(/<\/p>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
   }
 
-  function renderTagBar(tags) {
-    const scroll = document.querySelector('.tag-scroll');
-    // 기존 태그 칩 제거 (전체 버튼 제외)
-    scroll.querySelectorAll('.tag-chip:not([data-tag-id="all"])').forEach(el => el.remove());
-    tags.forEach(tag => {
-      const btn = document.createElement('button');
-      btn.className = 'tag-chip' + (String(tag.id) === String(currentTagId) ? ' active' : '');
-      btn.dataset.tagId = tag.id;
-      btn.textContent = '#' + tag.name;
-      btn.style.borderColor = tag.color;
-      if (String(tag.id) === String(currentTagId)) btn.style.background = tag.color;
-      btn.onclick = () => filterByTag(String(tag.id), btn, tag.color);
-      scroll.appendChild(btn);
-    });
-    // 전체 버튼 스타일 동기화
-    const allBtn = scroll.querySelector('[data-tag-id="all"]');
-    if (currentTagId === 'all') {
-      allBtn.classList.add('active');
-      allBtn.style.background = '';
-    } else {
-      allBtn.classList.remove('active');
-    }
+  function formatDateHeader(ts) {
+    const d = new Date(ts);
+    return d.getFullYear() + '.' + (d.getMonth()+1) + '.' + d.getDate() + ' ' + DOW[d.getDay()];
   }
 
-  function filterByTag(tagId, el, color) {
-    currentTagId = tagId;
-    document.querySelectorAll('.tag-chip').forEach(c => {
-      c.classList.remove('active');
-      c.style.background = '';
-    });
-    el.classList.add('active');
-    if (tagId !== 'all' && color) el.style.background = color;
-    render();
+  // 바텀바 스크롤 연동
+  function initScroll() {
+    const listEl = document.getElementById('note-list');
+    const bar    = document.getElementById('bottom-bar');
+    let lastY = 0;
+
+    listEl.addEventListener('scroll', () => {
+      const y = listEl.scrollTop;
+      if (y > lastY + 8 && y > 40) {
+        bar.classList.add('bb-hidden');
+      } else if (y < lastY - 8) {
+        bar.classList.remove('bb-hidden');
+      }
+      lastY = y;
+    }, { passive: true });
   }
 
-  function buildCard(note) {
-    const card = document.createElement('div');
-    const isExpanded = !note.is_folded;
-    card.className = 'note-card' + (isExpanded ? ' expanded' : '');
-    card.dataset.id = note.id;
+  function buildEntry(note) {
+    const text = plainText(note.content);
+    const display = note.title
+      ? note.title + (text ? '\n' + text : '')
+      : text;
+    if (!display) return null;
 
-    const preview = plainText(note.content);
-    const displayTitle = note.title || preview.substring(0, 30) || '제목 없음';
+    const entry = document.createElement('div');
+    entry.className = 'note-entry';
+    entry.dataset.id = note.id;
 
-    // 헤더 (버튼 포함 — 항상 보임)
-    const header = document.createElement('div');
-    header.className = 'note-card-header';
+    // 날짜 + 수평선
+    const dateHeader = document.createElement('div');
+    dateHeader.className = 'note-date-header';
+    const dateSpan = document.createElement('span');
+    dateSpan.className = 'note-date-text';
+    dateSpan.textContent = formatDateHeader(note.updated_at);
+    const line = document.createElement('div');
+    line.className = 'note-date-line';
+    dateHeader.append(dateSpan, line);
 
-    const foldIcon = document.createElement('span');
-    foldIcon.className = 'note-fold-icon';
-    foldIcon.textContent = '▶';
-
-    const meta = document.createElement('div');
-    meta.className = 'note-card-meta';
-    meta.innerHTML =
-      '<div class="note-card-title">' + esc(displayTitle) + '</div>' +
-      (preview ? '<div class="note-card-preview">' + esc(preview.substring(0, 60)) + '</div>' : '');
-
-    const date = document.createElement('span');
-    date.className = 'note-card-date';
-    date.textContent = formatDate(note.updated_at);
-
-    // 편집/삭제 버튼 — 헤더에 배치 (항상 접근 가능)
-    const headerActions = document.createElement('div');
-    headerActions.className = 'note-header-actions';
-
-    const editBtn = document.createElement('button');
-    editBtn.className = 'btn-edit-card';
-    editBtn.textContent = '편집';
-    editBtn.onclick = (e) => { e.stopPropagation(); Editor.openExisting(note.id); };
-
-    const delBtn = document.createElement('button');
-    delBtn.className = 'btn-del-card';
-    delBtn.textContent = '삭제';
-    delBtn.onclick = (e) => { e.stopPropagation(); List.deleteNote(note.id); };
-
-    headerActions.append(editBtn, delBtn);
-    header.append(foldIcon, meta, date, headerActions);
-    header.onclick = (e) => {
-      if (e.target.closest('.note-header-actions')) return;
-      toggleCard(card, note.id);
-    };
-
-    // 태그 뱃지
-    const tagRow = document.createElement('div');
-    tagRow.className = 'note-card-tags';
-    (note.tags || []).forEach(t => {
-      const b = document.createElement('span');
-      b.className = 'note-tag-badge';
-      b.style.background = t.color;
-      b.textContent = '#' + t.name;
-      tagRow.appendChild(b);
-    });
-
-    // 펼침 본문
+    // 본문
     const body = document.createElement('div');
-    body.className = 'note-card-body';
+    body.className = 'note-body-text';
+    body.textContent = display;
 
-    const contentEl = document.createElement('div');
-    contentEl.className = 'note-card-content';
-    contentEl.style.fontSize = (note.font_size || 16) + 'px';
-    contentEl.innerHTML = note.content || '';
+    // 16줄 초과 여부: 실제 줄 + 줄바꿈 없는 긴 단락 추정
+    const lines = display.split('\n');
+    const estLines = lines.reduce((s, l) => s + Math.max(1, Math.ceil(l.length / 22)), 0);
+    const isLong = estLines > 16;
 
-    const imgsEl = document.createElement('div');
-    imgsEl.className = 'note-card-images';
-    (note.images || []).forEach(img => {
-      const im = document.createElement('img');
-      im.src = 'file://' + img.file_path;
-      im.loading = 'lazy';
-      imgsEl.appendChild(im);
-    });
+    if (isLong) {
+      body.classList.add('body-collapsed');
+      const dots = document.createElement('div');
+      dots.className = 'note-expand-btn';
+      dots.textContent = '⋮';
+      dots.onclick = (e) => {
+        e.stopPropagation();
+        body.classList.remove('body-collapsed');
+        dots.remove();
+      };
+      entry.append(dateHeader, body, dots);
+    } else {
+      entry.append(dateHeader, body);
+    }
 
-    body.append(contentEl, imgsEl);
-    card.append(header, tagRow, body);
-    return card;
-  }
+    // 탭 → 편집
+    entry.onclick = () => Editor.openExisting(note.id);
 
-  function toggleCard(card, noteId) {
-    const willExpand = !card.classList.contains('expanded');
-    card.classList.toggle('expanded', willExpand);
-    DB.setFolded(noteId, !willExpand);
+    // 롱프레스 → 삭제
+    let pressTimer;
+    entry.addEventListener('touchstart', () => {
+      pressTimer = setTimeout(() => {
+        if (confirm('이 메모를 삭제하시겠습니까?')) {
+          DB.deleteNote(note.id);
+          render();
+        }
+      }, 650);
+    }, { passive: true });
+    entry.addEventListener('touchend',  () => clearTimeout(pressTimer), { passive: true });
+    entry.addEventListener('touchmove', () => clearTimeout(pressTimer), { passive: true });
+
+    return entry;
   }
 
   function render() {
     const tagId = currentTagId === 'all' ? -1 : currentTagId;
-    const notes = DB.getNotes(tagId);
-    const tags = DB.getTags();
-    renderTagBar(tags);
+    let notes = DB.getNotes(tagId);
+
+    if (searchQuery) {
+      notes = notes.filter(n => {
+        const t = plainText(n.content).toLowerCase();
+        return t.includes(searchQuery) || (n.title || '').toLowerCase().includes(searchQuery);
+      });
+    }
+
     const listEl = document.getElementById('note-list');
     listEl.innerHTML = '';
+
     if (!notes.length) {
-      listEl.innerHTML = '<p class="empty-msg">메모가 없습니다.<br>＋ 버튼을 눌러 첫 메모를 작성하세요.</p>';
+      listEl.innerHTML = '<p class="empty-msg">메모가 없습니다.<br>✏ 버튼을 눌러 작성하세요.</p>';
       return;
     }
-    notes.forEach(note => listEl.appendChild(buildCard(note)));
+    notes.forEach(note => {
+      const entry = buildEntry(note);
+      if (entry) listEl.appendChild(entry);
+    });
+  }
+
+  function filterByTag(tagId) {
+    currentTagId = tagId;
+    // 더보기 태그 칩 스타일 갱신
+    document.querySelectorAll('.more-tag-chip').forEach(c => {
+      c.classList.toggle('active', c.dataset.tagId === String(tagId));
+    });
+    render();
+  }
+
+  function toggleSearch() {
+    const bar   = document.getElementById('search-bar');
+    const input = document.getElementById('search-input');
+    if (bar.classList.contains('hidden')) {
+      bar.classList.remove('hidden');
+      setTimeout(() => input.focus(), 50);
+    } else {
+      closeSearch();
+    }
+  }
+
+  function closeSearch() {
+    document.getElementById('search-bar').classList.add('hidden');
+    document.getElementById('search-input').value = '';
+    searchQuery = '';
+    render();
+  }
+
+  function search(q) {
+    searchQuery = q.toLowerCase().trim();
+    render();
   }
 
   function deleteNote(id) {
@@ -165,5 +164,22 @@ const List = (() => {
     render();
   }
 
-  return { render, filterByTag, deleteNote };
+  return { render, filterByTag, toggleSearch, closeSearch, search, deleteNote, initScroll };
+})();
+
+// ── 목록 글자 크기 ──
+const ListFont = (() => {
+  let size = parseInt(localStorage.getItem('list_font_size')) || 18;
+
+  function apply() {
+    document.documentElement.style.setProperty('--list-font-size', size + 'px');
+    const lbl = document.getElementById('more-font-label');
+    if (lbl) lbl.textContent = size;
+  }
+
+  function inc() { if (size < 26) { size++; localStorage.setItem('list_font_size', size); apply(); } }
+  function dec() { if (size > 12) { size--; localStorage.setItem('list_font_size', size); apply(); } }
+  function load() { apply(); }
+
+  return { inc, dec, load };
 })();

@@ -12,7 +12,6 @@ const UI = (() => {
 
   function closePanel(id) {
     document.getElementById(id).classList.add('hidden');
-    // 다른 패널이 없으면 오버레이도 닫기
     const anyOpen = Array.from(document.querySelectorAll('.panel')).some(p => !p.classList.contains('hidden'));
     if (!anyOpen) document.getElementById('overlay').classList.add('hidden');
   }
@@ -32,7 +31,7 @@ const UI = (() => {
     list.innerHTML = '';
 
     if (!tags.length) {
-      list.innerHTML = '<p style="color:var(--subtext);text-align:center;padding:20px">태그가 없습니다.<br>태그 관리에서 먼저 추가하세요.</p>';
+      list.innerHTML = '<p style="color:#999;text-align:center;padding:20px">태그가 없습니다.<br>태그 관리에서 먼저 추가하세요.</p>';
     } else {
       tags.forEach(tag => {
         const item = document.createElement('label');
@@ -56,7 +55,7 @@ const UI = (() => {
 
       const saveBtn = document.createElement('button');
       saveBtn.textContent = '확인';
-      saveBtn.style.cssText = 'margin-top:14px;width:100%;padding:11px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px';
+      saveBtn.style.cssText = 'margin-top:14px;width:100%;padding:11px;background:#333;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:15px';
       saveBtn.onclick = () => {
         const ids = Array.from(list.querySelectorAll('input:checked')).map(el => parseInt(el.value));
         Editor.setCurrentTagIds(ids);
@@ -66,7 +65,6 @@ const UI = (() => {
       };
       list.appendChild(saveBtn);
     }
-
     openPanel('panel-note-tags');
   }
 
@@ -75,7 +73,37 @@ const UI = (() => {
     openPanel('panel-tags');
   }
 
-  return { showScreen, openPanel, closePanel, closeAllPanels, openSettings, openFontPanel, openTagPanel, openTagManager };
+  function openMoreMenu() {
+    // 태그 칩 렌더링
+    const row = document.getElementById('more-tag-chips');
+    row.innerHTML = '';
+    const tags = DB.getTags();
+
+    const allChip = document.createElement('button');
+    allChip.className = 'more-tag-chip' + (List.currentTag === 'all' || !List.currentTag ? ' active' : '');
+    allChip.dataset.tagId = 'all';
+    allChip.textContent = '전체';
+    allChip.onclick = () => { List.filterByTag('all'); closePanel('panel-more'); };
+    row.appendChild(allChip);
+
+    tags.forEach(tag => {
+      const chip = document.createElement('button');
+      chip.className = 'more-tag-chip';
+      chip.dataset.tagId = String(tag.id);
+      chip.textContent = '#' + tag.name;
+      chip.style.borderColor = tag.color;
+      chip.onclick = () => { List.filterByTag(String(tag.id)); closePanel('panel-more'); };
+      row.appendChild(chip);
+    });
+
+    // 글자 크기 라벨 동기화
+    const lbl = document.getElementById('more-font-label');
+    if (lbl) lbl.textContent = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--list-font-size')) || 18;
+
+    openPanel('panel-more');
+  }
+
+  return { showScreen, openPanel, closePanel, closeAllPanels, openSettings, openFontPanel, openTagPanel, openTagManager, openMoreMenu };
 })();
 
 // ── 태그 관리자 ──────────────────────────────────────────────────
@@ -85,7 +113,7 @@ const TagMgr = (() => {
     const list = document.getElementById('tag-list-panel');
     list.innerHTML = '';
     if (!tags.length) {
-      list.innerHTML = '<p style="color:var(--subtext);text-align:center;padding:16px">태그가 없습니다.</p>';
+      list.innerHTML = '<p style="color:#999;text-align:center;padding:16px">태그가 없습니다.</p>';
       return;
     }
     tags.forEach(tag => {
@@ -132,7 +160,7 @@ window.onAndroidBack = function() {
   return false;
 };
 
-// ── 공유 인텐트 체크 (onNewIntent에서 호출) ──────────────────────
+// ── 공유 인텐트 체크 ──────────────────────────────────────────────
 window.checkShared = function() {
   const shared = DB.getSharedText();
   if (shared && shared.text) { Editor.openNew(shared.text); return; }
@@ -143,8 +171,9 @@ window.checkShared = function() {
 // ── 앱 초기화 ─────────────────────────────────────────────────────
 function initApp() {
   Settings.load();
+  ListFont.load();
+  List.initScroll();
   List.render();
-  // 공유 인텐트로 진입한 경우
   window.checkShared();
 }
 

@@ -22,6 +22,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        startForegroundService(Intent(this, MemoHttpService::class.java))
         setContentView(R.layout.activity_main)
 
         db = DatabaseHelper(this)

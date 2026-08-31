@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+
+    <!-- ContentProvider 접근용 (adb/AI가 UI 없이 CRUD) -->
+    <permission android:name="com.gumo.memo.permission.READ" android:protectionLevel="normal"/>
+    <permission android:name="com.gumo.memo.permission.WRITE" android:protectionLevel="normal"/>
+
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
@@ -51,6 +58,18 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"/>
         </provider>
+
+        <!-- adb/AI가 앱 UI 없이 메모를 읽고 쓰는 통로 -->
+        <provider
+            android:name=".MemoProvider"
+            android:authorities="com.gumo.memo.provider"
+            android:exported="true"/>
+
+        <!-- 로컬 HTTP API (:8081) -->
+        <service
+            android:name=".MemoHttpService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync"/>
 
     </application>
 </manifest>

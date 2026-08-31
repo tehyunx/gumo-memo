@@ -12,22 +12,22 @@
 
 <!-- 목록 화면 -->
 <div id="screen-list" class="screen active">
-  <header class="app-header">
-    <span class="app-title">구모메모</span>
-    <div class="header-actions">
-      <button class="btn-icon" onclick="UI.openTagManager()">🏷</button>
-      <button class="btn-icon" onclick="UI.openSettings()">⚙️</button>
-    </div>
-  </header>
 
-  <div id="tag-filter-bar" class="tag-bar">
-    <div class="tag-scroll">
-      <button class="tag-chip active" data-tag-id="all" onclick="List.filterByTag('all', this)">전체</button>
-    </div>
+  <!-- 검색바 (숨김 상태로 시작) -->
+  <div id="search-bar" class="search-bar hidden">
+    <input id="search-input" type="search" placeholder="메모 검색..."
+           oninput="List.search(this.value)" autocomplete="off">
+    <button onclick="List.closeSearch()">✕</button>
   </div>
 
   <div id="note-list" class="note-list"></div>
-  <button class="fab" onclick="Editor.openNew()">＋</button>
+
+  <!-- 바텀바 -->
+  <div id="bottom-bar" class="bottom-bar">
+    <button class="bb-btn" onclick="Editor.openNew()">✏</button>
+    <button class="bb-btn" onclick="List.toggleSearch()">🔍</button>
+    <button class="bb-btn" onclick="UI.openMoreMenu()">⋮</button>
+  </div>
 </div>
 
 <!-- 에디터 화면 -->
@@ -53,9 +53,10 @@
 <div id="panel-settings" class="panel hidden">
   <div class="panel-header"><span>설정</span><button onclick="UI.closePanel('panel-settings')">✕</button></div>
   <div class="panel-body">
-    <label>기본 폰트 크기</label>
+    <label>에디터 폰트 크기</label>
     <div class="font-size-row">
-      <input type="range" min="12" max="24" step="1" id="setting-font-size" oninput="Settings.setFontSize(this.value)" onchange="Settings.setFontSize(this.value)">
+      <input type="range" min="12" max="24" step="1" id="setting-font-size"
+             oninput="Settings.setFontSize(this.value)" onchange="Settings.setFontSize(this.value)">
       <span id="setting-font-size-label">16px</span>
     </div>
     <label>기본 용지</label>
@@ -86,13 +87,40 @@
   <div id="note-tag-list" class="panel-body"></div>
 </div>
 
-<!-- 폰트 크기 패널 -->
+<!-- 에디터 폰트 크기 패널 -->
 <div id="panel-font" class="panel hidden">
-  <div class="panel-header"><span>글자 크기</span><button onclick="UI.closePanel('panel-font')">✕</button></div>
+  <div class="panel-header"><span>에디터 글자 크기</span><button onclick="UI.closePanel('panel-font')">✕</button></div>
   <div class="panel-body">
     <div class="font-size-row">
-      <input type="range" min="12" max="24" step="1" id="editor-font-size" oninput="Editor.setFontSize(this.value)" onchange="Editor.setFontSize(this.value)">
+      <input type="range" min="12" max="24" step="1" id="editor-font-size"
+             oninput="Editor.setFontSize(this.value)" onchange="Editor.setFontSize(this.value)">
       <span id="editor-font-size-label">16px</span>
+    </div>
+  </div>
+</div>
+
+<!-- 더보기 메뉴 패널 -->
+<div id="panel-more" class="panel hidden">
+  <div class="panel-header"><span>메뉴</span><button onclick="UI.closePanel('panel-more')">✕</button></div>
+  <div class="panel-body">
+    <!-- 목록 글자 크기 -->
+    <div class="more-section-label">목록 글자 크기</div>
+    <div class="more-font-row">
+      <button class="more-font-btn" onclick="ListFont.dec()">A−</button>
+      <span id="more-font-label">18</span>
+      <button class="more-font-btn" onclick="ListFont.inc()">A+</button>
+    </div>
+
+    <!-- 태그 필터 -->
+    <div class="more-section-label" style="margin-top:18px">태그 필터</div>
+    <div id="more-tag-chips" class="more-tag-row"></div>
+
+    <!-- 기타 -->
+    <div class="more-action-row" onclick="UI.openTagManager();UI.closePanel('panel-more')">
+      🏷 태그 관리
+    </div>
+    <div class="more-action-row" onclick="UI.openSettings();UI.closePanel('panel-more')">
+      ⚙ 설정
     </div>
   </div>
 </div>
