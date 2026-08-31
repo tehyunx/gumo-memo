@@ -2,9 +2,10 @@ const List = (() => {
   let currentTagId = 'all';
   let searchQuery = '';
   const DOW = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const MAX_THUMBS = 4;
 
   function plainText(html) {
-    return html
+    return String(html || '')
       .replace(/<br\s*\/?>/gi, '\n')
       .replace(/<\/div>/gi, '\n')
       .replace(/<\/p>/gi, '\n')
@@ -37,12 +38,35 @@ const List = (() => {
     }, { passive: true });
   }
 
+  // 목록에 깔 썸네일 (최대 4장, 나머지는 +N)
+  function buildThumbs(images) {
+    const row = document.createElement('div');
+    row.className = 'note-thumbs';
+    images.slice(0, MAX_THUMBS).forEach(img => {
+      const im = document.createElement('img');
+      im.className = 'note-thumb';
+      im.src = 'file://' + img.file_path;
+      im.loading = 'lazy';
+      im.onerror = () => im.classList.add('thumb-broken');
+      row.appendChild(im);
+    });
+    const rest = images.length - MAX_THUMBS;
+    if (rest > 0) {
+      const more = document.createElement('div');
+      more.className = 'note-thumb note-thumb-more';
+      more.textContent = '+' + rest;
+      row.appendChild(more);
+    }
+    return row;
+  }
+
   function buildEntry(note) {
     const text = plainText(note.content);
     const display = note.title
       ? note.title + (text ? '\n' + text : '')
       : text;
-    if (!display) return null;
+    const images = note.images || [];
+    if (!display && !images.length) return null;
 
     const entry = document.createElement('div');
     entry.className = 'note-entry';
@@ -83,6 +107,8 @@ const List = (() => {
       entry.append(dateHeader, body);
     }
 
+    if (images.length) entry.appendChild(buildThumbs(images));
+
     // 탭 → 편집
     entry.onclick = () => Editor.openExisting(note.id);
 
@@ -108,7 +134,7 @@ const List = (() => {
 
     if (searchQuery) {
       notes = notes.filter(n => {
-        const t = plainText(n.content).toLowerCase();
+        const t = plainText(n.content || '').toLowerCase();
         return t.includes(searchQuery) || (n.title || '').toLowerCase().includes(searchQuery);
       });
     }

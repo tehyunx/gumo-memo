@@ -78,6 +78,29 @@ body { background: #fff; }
 }
 .note-expand-btn:active { opacity: 0.4; }
 
+/* 첨부 사진 썸네일 */
+.note-thumbs {
+  display: flex; gap: 6px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.note-thumb {
+  width: 64px; height: 64px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #f0f0f0;
+  flex-shrink: 0;
+}
+.note-thumb.thumb-broken {
+  /* 파일이 사라진 경우에도 첨부가 있었다는 건 보이게 둔다 */
+  border: 1px dashed #d5d5d5;
+}
+.note-thumb-more {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 700; color: #888;
+  background: #f0f0f0;
+}
+
 /* ── 바텀바 ── */
 .bottom-bar {
   position: fixed; bottom: 0; left: 0; right: 0;

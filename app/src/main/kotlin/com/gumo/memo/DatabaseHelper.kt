@@ -102,7 +102,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, "gumo_memo.db
                 put("created_at", c.getLong(c.getColumnIndexOrThrow("created_at")))
                 put("updated_at", c.getLong(c.getColumnIndexOrThrow("updated_at")))
             }
-            obj.put("tags", getTagsForNote(c.getLong(c.getColumnIndexOrThrow("id"))))
+            val noteId = c.getLong(c.getColumnIndexOrThrow("id"))
+            obj.put("tags", getTagsForNote(noteId))
+            obj.put("images", getImagesForNote(noteId))
             result.put(obj)
         }
         c.close()
