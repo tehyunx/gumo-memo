@@ -8,6 +8,8 @@ import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
 import android.os.Bundle
+import android.os.Binder
+import android.os.Process
 import org.json.JSONObject
 import java.io.File
 
@@ -46,11 +48,20 @@ class MemoProvider : ContentProvider() {
         return true
     }
 
-    override fun getType(uri: Uri): String = when (matcher.match(uri)) {
-        NOTES   -> "vnd.android.cursor.dir/vnd.$AUTHORITY.notes"
-        NOTE_ID -> "vnd.android.cursor.item/vnd.$AUTHORITY.notes"
-        TAGS    -> "vnd.android.cursor.dir/vnd.$AUTHORITY.tags"
-        else    -> throw IllegalArgumentException("Unknown URI: $uri")
+    private fun guard() {
+        val uid = Binder.getCallingUid()
+        if (uid != Process.SHELL_UID && uid != Process.myUid())
+            throw SecurityException("구모메모: 허용되지 않은 호출 uid=$uid")
+    }
+
+    override fun getType(uri: Uri): String {
+        guard()
+        return when (matcher.match(uri)) {
+            NOTES   -> "vnd.android.cursor.dir/vnd.$AUTHORITY.notes"
+            NOTE_ID -> "vnd.android.cursor.item/vnd.$AUTHORITY.notes"
+            TAGS    -> "vnd.android.cursor.dir/vnd.$AUTHORITY.tags"
+            else    -> throw IllegalArgumentException("Unknown URI: $uri")
+        }
     }
 
     private fun MatrixCursor.addNote(n: JSONObject) {
@@ -67,6 +78,7 @@ class MemoProvider : ContentProvider() {
         uri: Uri, projection: Array<String>?, selection: String?,
         selectionArgs: Array<String>?, sortOrder: String?
     ): Cursor {
+        guard()
         return when (matcher.match(uri)) {
             NOTES -> {
                 val json = db.getNotes()
@@ -93,6 +105,7 @@ class MemoProvider : ContentProvider() {
     }
 
     override fun insert(uri: Uri, values: ContentValues?): Uri {
+        guard()
         if (matcher.match(uri) != NOTES) throw IllegalArgumentException("Unknown URI: $uri")
         val v = values ?: ContentValues()
         val json = JSONObject().apply {
@@ -109,6 +122,7 @@ class MemoProvider : ContentProvider() {
     override fun update(
         uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<String>?
     ): Int {
+        guard()
         if (matcher.match(uri) != NOTE_ID) throw IllegalArgumentException("Unknown URI: $uri")
         val id = uri.lastPathSegment!!.toLong()
         val v = values ?: ContentValues()
@@ -126,6 +140,7 @@ class MemoProvider : ContentProvider() {
     }
 
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<String>?): Int {
+        guard()
         if (matcher.match(uri) != NOTE_ID) throw IllegalArgumentException("Unknown URI: $uri")
         db.deleteNote(uri.lastPathSegment!!.toLong())
         context!!.contentResolver.notifyChange(uri, null)
@@ -134,6 +149,10 @@ class MemoProvider : ContentProvider() {
 
     /** adb로 백업 DB를 밀어넣고 통째로 복구하는 유틸. */
     override fun call(method: String, arg: String?, extras: Bundle?): Bundle? {
+        guard()
+        if (method == "help") return Bundle().apply {
+            putString("json", ApiHelp.document(context!!).toString())
+        }
         if (method != "restore_from_file") return null
         val result = Bundle()
         try {

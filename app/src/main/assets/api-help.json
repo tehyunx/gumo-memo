@@ -1,0 +1,245 @@
+{
+  "app": "com.gumo.memo",
+  "package": "com.gumo.memo",
+  "actions": [
+    {
+      "name": "help",
+      "description": "Provider 호출과 기존 HTTP 경로의 기계 판독 설명서",
+      "params": [],
+      "returns": {
+        "app": "com.gumo.memo",
+        "package": "com.gumo.memo",
+        "version": "1.0",
+        "actions": []
+      },
+      "risk": "read",
+      "call": "help"
+    },
+    {
+      "name": "restore_from_file",
+      "description": "raw ARG 폰의 백업 SQLite 파일 경로. 현재 DB 전체 덮어쓰기. 기존 Bundle.result 또는 Bundle.error 응답(JSON 키 아님).",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "required": true,
+          "example": "/sdcard/Download/gumo_memo.db"
+        }
+      ],
+      "returns": {
+        "result": "OK:12288"
+      },
+      "risk": "write",
+      "call": "restore_from_file",
+      "raw_arg": true
+    },
+    {
+      "name": "http.help",
+      "description": "이 설명서",
+      "params": [],
+      "returns": {
+        "app": "com.gumo.memo",
+        "package": "com.gumo.memo",
+        "version": "1.0",
+        "actions": []
+      },
+      "risk": "read",
+      "path": "/help",
+      "method": "GET"
+    },
+    {
+      "name": "http.status",
+      "description": "서버 상태",
+      "params": [],
+      "returns": {
+        "status": "ok",
+        "app": "gumo-memo",
+        "port": 8081
+      },
+      "risk": "read",
+      "path": "/status",
+      "method": "GET"
+    },
+    {
+      "name": "http.notes",
+      "description": "전체 메모·태그·이미지 목록",
+      "params": [],
+      "returns": [
+        {
+          "id": 3,
+          "title": "제목",
+          "content": "내용",
+          "paper_style": "lined",
+          "font_size": 16,
+          "is_folded": 0,
+          "created_at": 0,
+          "updated_at": 0,
+          "tags": [],
+          "images": []
+        }
+      ],
+      "risk": "read",
+      "path": "/notes",
+      "method": "GET"
+    },
+    {
+      "name": "http.notes.get",
+      "description": "메모 상세",
+      "params": [
+        {
+          "name": "id",
+          "type": "integer",
+          "required": true,
+          "example": 3
+        }
+      ],
+      "returns": {
+        "id": 3,
+        "title": "제목",
+        "content": "내용",
+        "paper_style": "lined",
+        "font_size": 16,
+        "is_folded": 0,
+        "created_at": 0,
+        "updated_at": 0,
+        "tags": [],
+        "images": []
+      },
+      "risk": "read",
+      "path": "/notes/{id}",
+      "method": "GET"
+    },
+    {
+      "name": "http.notes.add",
+      "description": "메모 저장. id>0이면 기존 행 갱신",
+      "params": [
+        {
+          "name": "id",
+          "type": "integer",
+          "required": false,
+          "example": 3
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "required": false,
+          "example": "제목"
+        },
+        {
+          "name": "content",
+          "type": "string",
+          "required": false,
+          "example": "내용"
+        },
+        {
+          "name": "paper_style",
+          "type": "string",
+          "required": false,
+          "example": "lined"
+        },
+        {
+          "name": "font_size",
+          "type": "integer",
+          "required": false,
+          "example": 16
+        },
+        {
+          "name": "is_folded",
+          "type": "integer",
+          "required": false,
+          "example": 0
+        }
+      ],
+      "returns": {
+        "id": 3
+      },
+      "risk": "write",
+      "path": "/notes",
+      "method": "POST"
+    },
+    {
+      "name": "http.notes.update",
+      "description": "메모 저장. 생략 필드는 기본값으로 덮어쓴다",
+      "params": [
+        {
+          "name": "id",
+          "type": "integer",
+          "required": true,
+          "example": 3
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "required": false,
+          "example": "제목"
+        },
+        {
+          "name": "content",
+          "type": "string",
+          "required": false,
+          "example": "내용"
+        },
+        {
+          "name": "paper_style",
+          "type": "string",
+          "required": false,
+          "example": "lined"
+        },
+        {
+          "name": "font_size",
+          "type": "integer",
+          "required": false,
+          "example": 16
+        },
+        {
+          "name": "is_folded",
+          "type": "integer",
+          "required": false,
+          "example": 0
+        }
+      ],
+      "returns": {
+        "result": "ok"
+      },
+      "risk": "write",
+      "path": "/notes/{id}",
+      "method": "PUT"
+    },
+    {
+      "name": "http.notes.delete",
+      "description": "메모 삭제",
+      "params": [
+        {
+          "name": "id",
+          "type": "integer",
+          "required": true,
+          "example": 3
+        }
+      ],
+      "returns": {
+        "result": "ok"
+      },
+      "risk": "write",
+      "path": "/notes/{id}",
+      "method": "DELETE"
+    },
+    {
+      "name": "http.tags",
+      "description": "태그 목록",
+      "params": [],
+      "returns": [
+        {
+          "id": 1,
+          "name": "태그",
+          "color": "#888888"
+        }
+      ],
+      "risk": "read",
+      "path": "/tags",
+      "method": "GET"
+    }
+  ],
+  "port": 8081,
+  "provider": "content://com.gumo.memo.provider",
+  "description": "call이 있는 항목은 Provider, path/method가 있는 항목은 HTTP. raw_arg=true이면 JSON 포장 없이 arg 문자열 전달. 기존 동작의 응답 형식은 유지한다. HTTP 서버는 앱이 실행 중일 때 사용 가능."
+}

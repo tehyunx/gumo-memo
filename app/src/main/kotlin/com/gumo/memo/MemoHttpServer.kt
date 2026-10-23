@@ -1,10 +1,12 @@
 package com.gumo.memo
 
+import android.content.Context
 import fi.iki.elonen.NanoHTTPD
 import org.json.JSONObject
 
 class MemoHttpServer(
     private val db: DatabaseHelper,
+    private val context: Context,
     port: Int = 8081
 ) : NanoHTTPD(port) {
 
@@ -13,6 +15,9 @@ class MemoHttpServer(
         val meth = session.method
         return try {
             when {
+                uri == "/help" && meth == Method.GET ->
+                    ok(ApiHelp.document(context).toString())
+
                 uri == "/status" ->
                     ok("""{"status":"ok","app":"gumo-memo","port":8081}""")
 

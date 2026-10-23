@@ -16,7 +16,7 @@ class MemoHttpService : Service() {
         super.onCreate()
         createChannel()
         startForeground(2, buildNotif())
-        server = MemoHttpServer(DatabaseHelper(this)).also {
+        server = MemoHttpServer(DatabaseHelper(this), this).also {
             try {
                 it.start()
                 Log.d("MemoHttp", "started :8081")
