@@ -216,3 +216,8 @@ body { background: #fff; }
 /* 오버레이 */
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 90; }
 .overlay.hidden { display: none; }
+
+/* 검색: 찾은 자리 한 줄 */
+.note-hit { font-size: 14px; color: var(--subtext); line-height: 1.5; margin: 2px 0 4px; word-break: break-all; }
+.note-hit mark { background: #ffe58a; color: var(--text); border-radius: 3px; padding: 0 2px; }
+.search-partial { font-size: 13px; color: var(--subtext); text-align: center; margin: 8px 16px; }

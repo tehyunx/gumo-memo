@@ -60,11 +60,36 @@ const List = (() => {
     return row;
   }
 
-  function buildEntry(note) {
+  function displayText(note) {
     const text = plainText(note.content);
-    const display = note.title
-      ? note.title + (text ? '\n' + text : '')
-      : text;
+    return note.title ? note.title + (text ? '\n' + text : '') : text;
+  }
+
+  // 검색용 자모 색인 — 글이 바뀔 때만 다시 만든다
+  const indexCache = new Map();
+  function noteIndex(note) {
+    const c = indexCache.get(note.id);
+    if (c && c.at === note.updated_at) return c.ix;
+    const ix = Fuzzy.index(displayText(note));
+    indexCache.set(note.id, {at: note.updated_at, ix});
+    return ix;
+  }
+
+  // 찾은 자리 앞뒤 한 줄 (긴 글은 접혀서 안 보일 수 있으므로)
+  function buildHit(display, hit) {
+    const el = document.createElement('div');
+    el.className = 'note-hit';
+    const a = Math.max(0, hit.a - 20), b = Math.min(display.length, hit.b + 1 + 30);
+    const flat = s => s.replace(/\s+/g, ' ');
+    const mark = document.createElement('mark');
+    mark.textContent = flat(display.slice(hit.a, hit.b + 1));
+    el.append((a > 0 ? '…' : '') + flat(display.slice(a, hit.a)), mark,
+              flat(display.slice(hit.b + 1, b)) + (b < display.length ? '…' : ''));
+    return el;
+  }
+
+  function buildEntry(note, hit) {
+    const display = displayText(note);
     const images = note.images || [];
     if (!display && !images.length) return null;
 
@@ -81,6 +106,7 @@ const List = (() => {
     const line = document.createElement('div');
     line.className = 'note-date-line';
     dateHeader.append(dateSpan, line);
+    const hitEl = hit ? buildHit(display, hit) : null;
 
     // 본문
     const body = document.createElement('div');
@@ -107,6 +133,7 @@ const List = (() => {
       entry.append(dateHeader, body);
     }
 
+    if (hitEl) dateHeader.after(hitEl);
     if (images.length) entry.appendChild(buildThumbs(images));
 
     // 탭 → 편집
@@ -132,22 +159,39 @@ const List = (() => {
     const tagId = currentTagId === 'all' ? -1 : currentTagId;
     let notes = DB.getNotes(tagId);
 
+    const hits = new Map();
+    let partial = false;
     if (searchQuery) {
-      notes = notes.filter(n => {
-        const t = plainText(n.content || '').toLowerCase();
-        return t.includes(searchQuery) || (n.title || '').toLowerCase().includes(searchQuery);
-      });
+      // 낱말마다 따로·비슷한 말도 — 다 맞는 글이 없으면 가장 많이 맞는 글
+      const words = Fuzzy.prepare(searchQuery);
+      const scored = notes.map(n => {
+        const r = Fuzzy.score(noteIndex(n), words, (n.title || '').length);
+        return {n, r};
+      }).filter(x => x.r.n > 0);
+      const most = scored.reduce((m, x) => Math.max(m, x.r.n), 0);
+      partial = most < words.length;
+      notes = scored.filter(x => x.r.n === most)
+        .sort((a, b) => b.r.s - a.r.s || b.n.updated_at - a.n.updated_at)
+        .map(x => { hits.set(x.n.id, x.r.hit); return x.n; });
     }
 
     const listEl = document.getElementById('note-list');
     listEl.innerHTML = '';
 
     if (!notes.length) {
-      listEl.innerHTML = '<p class="empty-msg">메모가 없습니다.<br>✏ 버튼을 눌러 작성하세요.</p>';
+      listEl.innerHTML = searchQuery
+        ? '<p class="empty-msg">찾는 메모가 없습니다.</p>'
+        : '<p class="empty-msg">메모가 없습니다.<br>✏ 버튼을 눌러 작성하세요.</p>';
       return;
     }
+    if (partial) {
+      const p = document.createElement('p');
+      p.className = 'search-partial';
+      p.textContent = '모든 낱말이 들어간 메모가 없어, 가장 많이 맞는 메모를 보여 드립니다.';
+      listEl.appendChild(p);
+    }
     notes.forEach(note => {
-      const entry = buildEntry(note);
+      const entry = buildEntry(note, hits.get(note.id));
       if (entry) listEl.appendChild(entry);
     });
   }
